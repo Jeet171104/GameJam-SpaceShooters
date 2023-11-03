@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>SpaceShooter</title>
+    <!-- <link rel="stylesheet" href="GameCSS.css"> -->
+    <style>
+        .container {
+            position: relative;
+            width: 100%;
+            height: 100px;
+            overflow: hidden;
+        }
+
+        .bullet {
+            position: absolute;
+            background-color: rgb(231, 9, 9);
+            height: 5px;
+            width: 30px;
+            top: 50px;
+            border-bottom-right-radius: 80%;
+            border-top-right-radius: 80%;
+            left: 100px;
+        }
+
+        #vessel {
+            position: relative;
+            width: 100%;
+            height: 800px;
+            overflow: hidden;
+
+        }
+
+        .moving-element {
+            position: absolute;
+            width: 100px;
+            height: 60px;
+            border-top-left-radius: 40%;
+            border-bottom-left-radius: 40%;
+            background-image: url(https://codingjrgfs.s3.ap-south-1.amazonaws.com/games/photos/enemy.png);
+            /* background-color: rgb(134, 133, 133); */
+            background-size: cover;
+        }
+
+        #plane {
+            /* background-color: blue; */
+            height: 100px;
+            width: 150px;
+            border-radius: 40%;
+            border-top-left-radius: 70%;
+            border-top-right-radius: 70%;
+            border-bottom-left-radius: 70%;
+            border-bottom-right-radius: 70%;
+            background-image: url(https://codingjrgfs.s3.ap-south-1.amazonaws.com/games/photos/rocket.png);
+            background-size: cover;
+            position: absolute;
+        }
+
+        #background {
+            background-image: url(https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcREJDF4UO4HkJnKPLJ-FG-bteAzNQajUFwOfg&usqp=CAU);
+            height: 100%;
+            width: 100%;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="background">
+        <div class="container" id="container"></div>
+        <div id="plane"></div>
+        <div id="vessel"></div>
+        <button id="restartButton">Restart Game</button>
+    </div>
+    
+
+    <script>
+        const container = document.getElementById("container");
+
+        const bullets = [];
+        restartButton.addEventListener("click", () => {
+            // Remove all bullets
+            bullets.forEach((bullet) => container.removeChild(bullet));
+            bullets.length = 0;
+
+            // Remove all moving elements (rocks)
+            const elements = document.querySelectorAll(".moving-element");
+            elements.forEach((element) => vessel.removeChild(element));
+
+            // Reset the plane's position
+            planeYaxis = 0;
+            bulletYaxis = 0;
+            plane.style.top = planeYaxis + "px";
+            container.style.top = bulletYaxis + "px";
+
+            // Start the game again
+            generateRandomElements();
+        });
+        function createBullet() {
+            const bullet = document.createElement("div");
+            bullet.className = "bullet";
+            container.appendChild(bullet);
+
+            bullets.push(bullet);
+
+            let position = -30;
+            let speed = 10;
+
+            const bulletMove = () => {
+                position += speed;
+                bullet.style.left = position + "px";
+
+                if (position > container.clientWidth) {
+                    bullets.splice(bullets.indexOf(bullet), 1);
+                    container.removeChild(bullet);
+                } else {
+
+                    checkCollisions(bullet);
+                    requestAnimationFrame(bulletMove);
+                }
+            };
+
+            bulletMove();
+        }
+
+        setInterval(createBullet, 1000);
+    </script>
+
+    <script>
+        const plane = document.getElementById("plane");
+        let planeYaxis = 0;
+        let bulletYaxis = 0;
+        const planeMover = 50;
+        const minY = 100; // Minimum Y position for the plane
+        const maxY = 800; // Maximum Y position for the plane (adjust as needed)
+
+        document.addEventListener("keydown", (event) => {
+            if (event.key === "w" || event.key === "ArrowUp") {
+                planeYaxis = Math.max(minY, planeYaxis - planeMover);
+                bulletYaxis = Math.max(minY, bulletYaxis - planeMover);
+            } else if (event.key === "s" || event.key === "ArrowDown") {
+                planeYaxis = Math.min(maxY, planeYaxis + planeMover);
+                bulletYaxis = Math.min(maxY, bulletYaxis + planeMover);
+            }
+            plane.style.top = planeYaxis + "px";
+            container.style.top = bulletYaxis + "px";
+        });
+
+    </script>
+    <script>
+        const vessel = document.getElementById("vessel");
+
+        function getRandom(min, max) {
+            return Math.random() * (max - min) + min;
+        }
+
+        function createMovingElement() {
+            const element = document.createElement("div");
+            element.className = "moving-element";
+            vessel.appendChild(element);
+
+            const startRight = vessel.clientWidth;
+            const startY = getRandom(0, vessel.clientHeight - 40);
+            element.style.top = startY + "px";
+            element.style.left = startRight + "px";
+            const speed = getRandom(1, 7);
+
+            function moveElement() {
+                const currentPosition = parseFloat(element.style.left);
+                element.style.left = currentPosition - speed + "px";
+
+                if (currentPosition < -40) {
+                    vessel.removeChild(element);
+                } else {
+                    requestAnimationFrame(moveElement);
+                }
+            }
+
+            moveElement();
+        }
+
+        function checkCollisions(bullet) {
+            const bulletRect = bullet.getBoundingClientRect();
+            const elements = document.querySelectorAll(".moving-element");
+
+            elements.forEach((element) => {
+                const elementRect = element.getBoundingClientRect();
+
+                if (
+                    bulletRect.right > elementRect.left &&
+                    bulletRect.left < elementRect.right &&
+                    bulletRect.bottom > elementRect.top &&
+                    bulletRect.top < elementRect.bottom
+                ) {
+
+                    vessel.removeChild(element);
+                }
+            });
+        }
+
+        function generateRandomElements() {
+            createMovingElement();
+            setTimeout(generateRandomElements, 1000); // This code helps in generating rocks faster or slower!!
+        }
+
+        generateRandomElements();
+
+
+
+
+        // Add a score variable
+        let score = 0;
+
+        // Function to update the score
+        function updateScore(increment) {
+            score += increment;
+            // Display the updated score
+            console.log("Score: " + score); // You can replace this with your score display logic
+        }
+
+        // ...
+
+        function moveElement() {
+            const currentPosition = parseFloat(element.style.left);
+            element.style.left = currentPosition - speed + "px";
+
+            if (currentPosition < -40) {
+                vessel.removeChild(element);
+                // Increase the score when an element goes out of the background
+                updateScore(10); // Adjust the score increment as needed
+            } else {
+                requestAnimationFrame(moveElement);
+            }
+        }
+
+        // ...
+
+        // Initialize the score
+        updateScore(0);
+
+        // ...
+
+    </script>
+</body>
+
+</html>
